@@ -1,3 +1,15 @@
+## a simple diary engine
+## ---------------------
+## 
+## scans a directory for ``.mkd`` files and reads the first line as a title 
+## and the first few lines as an abstract.
+## 
+## usage
+## -----
+## 
+## ::
+## 
+##   diaryengie <directory>
 import os
 import strutils
 import streams
