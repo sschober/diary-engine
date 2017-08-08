@@ -33,14 +33,19 @@ proc open_target_file(path: string): FileStream =
   if isNil(result):
     error "cannot open target file: ", targetFileName
 
+proc process(dir: string) =
+  ## scans dir for DiaryEntries and outputs the gathered information to a output file in that dir
+  let outFs = open_target_file(dir)
+  let diaryEntries = gather_information_at_dir(dir, default_output_filename)
+  info "found ", len(diaryEntries),  " entries"
+  output_information(outFs, diaryEntries)
+
 when isMainModule:
   if paramCount()  > 0:
-    let t = cpuTime()
     let scan_dir = paramStr(1)
-    let outFs = open_target_file(scan_dir)
-    let diaryEntries = gather_information_at_dir(scan_dir, default_output_filename)
-    info "found ", len(diaryEntries),  " entries"
-    output_information(outFs, diaryEntries)
-    info("scan time: ", (cpuTime() - t) * 1000, "ms")
+    let t1 = cpuTime()
+    scan_dir.process()
+    let t2 = cpuTime()
+    info("scan time: ", (t2 - t1) * 1000, "ms")
   else:
     error("usage: " & paramStr(0) & " <directory>")
