@@ -1,6 +1,7 @@
 import re
 import strutils
 
+const file_extension* = ".mkd"
 const sidenotes_suffix = "{@paragraph .sidenote}" ## hoedown supports metadata annotations; we don't want those in the abstracts
 
 proc is_sidenote(line: string): bool =

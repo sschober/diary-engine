@@ -1,6 +1,6 @@
 import unittest
 
-include markdown
+include private/markdown
 
 suite "test markdown utils":
   test "footnote references are removed":
