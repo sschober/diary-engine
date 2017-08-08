@@ -2,10 +2,17 @@
 
 a simplistic diary engine writte in nim.
 
+'diary engine' in the sense of this tool is just a fancy name
+for a table of contents generator. diary entries
+
 ## build
 
-    nim c diaryengine.nim
+    nimble build
+
+## test
+
+	nimble test
 
 ## run
 
-	./diaryengine
+	./diaryengine <path to mkd files>

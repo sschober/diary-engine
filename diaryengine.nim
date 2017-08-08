@@ -1,29 +1,31 @@
 ## a simple diary engine
 ## ---------------------
-## 
-## scans a directory for ``.mkd`` files and reads the first line as a title 
+##
+## scans a directory for ``.mkd`` files and reads the first line as a title
 ## and the first few lines as an abstract.
-## 
+##
 ## usage
 ## -----
-## 
+##
 ## ::
-## 
+##
 ##   diaryengine <directory>
-## 
+##
 import os
 import strutils
 import streams
 import times
 import logging
 import ospaths
+import re
 
 include defaults
 include types
 include rendering
+include markdown
 
 
-addHandler(newConsoleLogger())
+addHandler(newConsoleLogger()) ## supplies debug, info, ... procs
 
 
 proc read_title(fs: FileStream): string =
@@ -32,11 +34,9 @@ proc read_title(fs: FileStream): string =
   if not fs.readLine(result):
     result = nil
   else:
+    result = strip(result, chars = {' ', '#'}) ## remove whitespace and leading #, so we control the indentation level
     debug("read title '", result, "'")
   return result
-
-proc is_sidenote(line: string): bool =
-  line.endsWith(sidenotes_suffix)
 
 proc read_abstract(fs: FileStream): string =
   ## reads three consecutive lines, but not more than abstract_length characters
@@ -46,15 +46,15 @@ proc read_abstract(fs: FileStream): string =
   while i > 0 and len(result) < abstract_length and fs.readLine(line):
     if len(line) == 0: continue
     if is_sidenote(line): continue
-    # TODO: strip markdown stuff
+    line = remove_markdown_markup(line)
     debug("adding line ", line)
-    result.add line
+    result.add line & " "
     dec(i)
   if len(result) > abstract_length:
     debug("line too long... stripping")
     result = result[0..<abstract_length]
 
-proc gather_information_on_file(file: string) : DiaryEntry = 
+proc gather_information_on_file(file: string) : DiaryEntry =
   ## constructs a DiaryEntry from file
   result = (path: file, title: "", abstract: "")
   debug("reading file ", file)
@@ -77,7 +77,6 @@ proc gather_information_at_dir(base_path: string): DiaryEntries =
       var diaryEntry  = gather_information_on_file(path)
       result.add diaryEntry
 
-
 proc output_information(outFs: FileStream, diaryEntries: DiaryEntries) =
   ## takes a sequence of DiaryEntries and ouputs them to the given file stream
   let output_document = render_output_document(diaryEntries)
@@ -90,12 +89,12 @@ proc open_target_file(path: string): FileStream =
   if isNil(result):
     echo "cannot open target file: ", targetFileName
 
-if paramCount()  > 0:
-  let t = cpuTime()
-  let outFs = open_target_file(paramStr(1))
-  let diaryEntries = gather_information_at_dir(paramStr(1))
-  output_information(outFs, diaryEntries)
-  info("scan time: ", (cpuTime() - t) * 1000, "ms")
-else:
-  error("usage: " & paramStr(0) & " <directory>")
-
+when isMainModule:
+  if paramCount()  > 0:
+    let t = cpuTime()
+    let outFs = open_target_file(paramStr(1))
+    let diaryEntries = gather_information_at_dir(paramStr(1))
+    output_information(outFs, diaryEntries)
+    info("scan time: ", (cpuTime() - t) * 1000, "ms")
+  else:
+    error("usage: " & paramStr(0) & " <directory>")
